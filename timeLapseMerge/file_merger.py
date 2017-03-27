@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
-import os, sys
+import os, sys, time
 from shutil import copyfile
+from PIL import Image
+import numpy as np
+import numexpr as ne
+import matplotlib.pyplot as plt
 
 def merge_files(root_dir, dest_dir):
     '''
@@ -10,6 +14,10 @@ def merge_files(root_dir, dest_dir):
     file_counter = 0
     file_prefix = 'G'
     file_postfix = '.JPG'
+
+    img_brightness = []
+    #img_green = []
+    
     for sub_dir, _, files in os.walk(root_dir):
         num_files = len(files)
         if num_files == 0:
@@ -18,11 +26,41 @@ def merge_files(root_dir, dest_dir):
         for i in range(0, num_files):
             src = sub_dir + '/' + files[i]
             dest = dest_dir + file_prefix + str(file_counter).zfill(7) + file_postfix
+            
+            img_brightness.append( get_image_brightness(src) )
+            
+
             #print dest
-            copyfile(src, dest)
+            #copyfile(src, dest)
             file_counter += 1
             
             print_progress(i, num_files)
+
+    plt.hist(img_brightness, 50)
+    plt.show()
+
+def get_image_brightness(src):
+    max_score = 255.
+
+    #time0 = time.time()
+
+    im = Image.open(src)
+    pixels = np.array(im)
+    
+    pixel_scores = ne.evaluate('(pixels) / max_score')
+    
+
+    #f_score = lambda t: np.divide(np.sum(np.square(t)), max_score)
+    #f_score = lambda t: t 
+    #scorer = np.vectorize(f_score)
+    #pixel_scores = scorer(pixels)
+    avg_score = np.average(pixel_scores)
+    
+    #time1 = time.time()
+    #print('time taken:', (time1-time0))
+    
+    return avg_score
+
 
 # Print iterations progress
 def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_length=75):
@@ -47,6 +85,7 @@ def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_lengt
     if iteration == total:
         sys.stdout.write('\n\tDone.\n\n')
         sys.stdout.flush()
+
 
 
 def read_command(argv):
