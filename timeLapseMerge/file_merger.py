@@ -15,6 +15,8 @@ def merge_files(root_dir, dest_dir):
     file_prefix = 'G'
     file_postfix = '.JPG'
 
+    num_root_folders = len(root_dir.split('/'))
+
     img_brightness = []
     #img_green = []
     
@@ -22,12 +24,13 @@ def merge_files(root_dir, dest_dir):
         num_files = len(files)
         if num_files == 0:
             continue
+        img_brightness_dir = []
         print "copying", sub_dir, "with", num_files, "files."
         for i in range(0, num_files):
             src = sub_dir + '/' + files[i]
             dest = dest_dir + file_prefix + str(file_counter).zfill(7) + file_postfix
             
-            img_brightness.append( get_image_brightness(src) )
+            img_brightness_dir.append( get_image_brightness(src) )
             
 
             #print dest
@@ -36,8 +39,12 @@ def merge_files(root_dir, dest_dir):
             
             print_progress(i, num_files)
 
+        plt.hist(img_brightness_dir)
+        plt.savefig(sub_dir.split('/')[num_root_folders-1] + '.png')
+        img_brightness = np.concatenate((img_brightness, img_brightness_dir))
+    
     plt.hist(img_brightness, 50)
-    plt.show()
+    plt.savefig('cumulative.png')
 
 def get_image_brightness(src):
     max_score = 255.
